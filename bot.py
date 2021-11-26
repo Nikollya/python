@@ -1,4 +1,5 @@
 import config
+import profile
 import telebot
 from telebot import types
 from database import Database
@@ -37,15 +38,14 @@ def start(message):
     item2 = types.KeyboardButton('Я Девушка 👩‍🦱')
     markup.add(item1, item2)
 
-    bot.send_message(message.chat.id, 'Привет, {0.first_name}! Добро пожаловать в анонимный чат! Укажите ваш пол! '.format(
-        message.from_user), reply_markup=markup)
+    bot.send_message(message.chat.id, 'Привет, {0.first_name}! Добро пожаловать в анонимный чат! Укажите ваш пол! '.format(message.from_user), reply_markup=markup)
 
 
 @bot.message_handler(commands=['menu'])
 def menu(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     item1 = types.KeyboardButton('👥 Поиск собеседника')
-    item2 = types.KeyboardButton('❌ Удалить свой профиль')
+    item2 = types.KeyboardButton('👨 Профиль')
     markup.add(item1, item2)
 
     bot.send_message(message.chat.id, '📝 Меню'.format(
@@ -59,7 +59,7 @@ def stop(message):
         db.delete_chat(chat_info[0])
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         item1 = types.KeyboardButton('✏️ Следующий диалог')
-        item2 = types.KeyboardButton('📝 Меню')
+        item2 = types.KeyboardButton('/menu')
         markup.add(item1, item2)
 
         bot.send_message(
@@ -68,13 +68,31 @@ def stop(message):
                          reply_markup=markup)
     else:
         bot.send_message(
-            message.chat.id, '❌ Вы не начали чат!', reply_markup=markup)
+            message.chat.id, '❌ Вы не начали чат!')  # , reply_markup=markup)
 
 
 @bot.message_handler(content_types=['text'])
 def bot_message(message):
     if message.chat.type == 'private':
-        if message.text == '❌ Удалить свой профиль':
+        if message.text == '👨 Профиль':
+            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+            item1 = types.KeyboardButton('/menu')
+            item2 = types.KeyboardButton('🔞 Изменить свой возраст')
+            item3 = types.KeyboardButton('🏳️ Изменить свою страну')
+            item4 = types.KeyboardButton('❌ Удалить свой профиль')
+            markup.add(item2, item3, item4, item1)
+            bot.send_message(message.chat.id, '👨 Ваш профиль:\n Имя в телграм: {0.first_name}\nВаша страна: \nВаш возраст: '.format(message.from_user), reply_markup=markup)
+        elif message.text == '🔞 Изменить свой возраст':
+            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+            item1 = types.KeyboardButton('/menu')
+            bot.send_message(message.chat.id, '📝 Меню')
+            markup.add(item1)
+        elif message.text == '🏳️ Изменить свою страну':
+            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+            item1 = types.KeyboardButton('/menu')
+            bot.send_message(message.chat.id, '📝 Меню')
+            markup.add(item1)
+        elif message.text == '❌ Удалить свой профиль':
             markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
             item1 = types.KeyboardButton('/start')
             markup.add(item1)
@@ -105,7 +123,8 @@ def bot_message(message):
             else:
                 mess = 'Собеседник найден! Чтобы остановить диалог, напишите /stop'
 
-                bot.send_message(message.chat.id, mess,reply_markup=stop_dialog())
+                bot.send_message(message.chat.id, mess,
+                                 reply_markup=stop_dialog())
                 bot.send_message(chat_two, mess, reply_markup=stop_dialog())
 
         elif message.text == '🔎 Девушка':
@@ -137,7 +156,7 @@ def bot_message(message):
                                  reply_markup=stop_dialog())
                 bot.send_message(chat_two, mess, reply_markup=stop_dialog())
 
-        elif message.text == '🗣 Сказать свой профиль':
+        elif message.text == '🗣 Отправить свой профиль':
             chat_info = db.get_active_chat(message.chat.id)
             if chat_info != False:
                 if message.from_user.username:
